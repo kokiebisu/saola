@@ -1,15 +1,15 @@
-import os
-from pathlib import Path
-import time
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+import os
+import sys
+import time
+
 from lib.extractor import download_image_urls, extract_chapter_content, extract_chapter_links, extract_manga_title
 from lib.utils import get_desktop_folder
 
 
 def main():
-    # url = sys.argv[1]
-    # url = 'https://mangareader.to/kingdom-10'
-    url = 'https://mangareader.to/i-was-told-to-relinquish-my-fiance-to-my-little-sister-and-the-greatest-dragon-took-a-liking-to-me-and-unbelievably-took-over-the-kingdom-10695'
+    url = sys.argv[1]
     desktop_path = get_desktop_folder()
     title = extract_manga_title(url)
     manga_path = Path(desktop_path / title)
@@ -22,7 +22,6 @@ def main():
             chapter_path = Path(manga_path / f'{chapter.name}')
             os.mkdir(chapter_path)
             futures.append(executor.submit(process_chapter, chapter.link, chapter_path))
-
         for future in futures:
             future.result()
 
