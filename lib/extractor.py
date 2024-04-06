@@ -1,10 +1,9 @@
+from pathlib import Path
 import json
 import logging
-import os
-from urllib.parse import urlparse
+import base64
+import time
 import requests
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -25,7 +24,8 @@ logging.basicConfig(
 # Configure Chrome options
 chrome_options = Options()
 chrome_options.add_argument("--headless")
-
+chrome_options.add_argument("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1")
+chrome_options.add_experimental_option("mobileEmulation", {"deviceName": "Nexus 5"})
 
 class Chapter:
     def __init__(self, base_url, name, link):
@@ -37,29 +37,6 @@ class Chapter:
             'name': self.name,
             'link': self.link
         })
-
-
-def download_image_urls(image_urls, output_dir):
-    with ThreadPoolExecutor() as executor:
-        for i, url in enumerate(image_urls, start=1):
-            logging.info(f'Downloading image for url: {url}')
-            executor.submit(partial(_download_image, url, output_dir, i))
-
-
-def _download_image(url, output_dir, index):
-    try:
-        response = requests.get(url, stream=True)
-        if response.status_code == 200:
-            file_name = f"page_{index}.{os.path.splitext(urlparse(url).path)[1][1:]}"
-            file_path = os.path.join(output_dir, file_name)
-            with open(file_path, "wb") as file:
-                response.raw.decode_content = True
-                file.write(response.raw.data)
-            logging.info(f"Downloaded: {file_name}")
-        else:
-            logging.error(f"Failed to download: {url}")
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error downloading {url}: {e}")
 
 
 def extract_manga_title(url):
@@ -96,28 +73,33 @@ def extract_chapter_links(url):
         return []
 
 
-def extract_chapter_content(url, headless=True):
+def extract_chapter_content(url, chapter_path):
     '''
     Extracts all the chapter content (images) associated with the chapter.
     Returns the image urls in a list.
     '''
     try:
         logging.info(f'Extracting Chapter Content for url: {url}')
-        if headless:
-            driver = webdriver.Chrome(options=chrome_options)
-        else:
-            driver = webdriver.Chrome()
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.set_window_size(390, 844)
 
         driver.get(url)
         _allow_reading_content(driver)
         wait = WebDriverWait(driver, 10)
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".divslide-wrapper")))
-        image_urls = _extract_chapter_image_urls(driver)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.container-reader-chapter")))
+        _scroll_down_page(driver)
+        _download_blob_images(driver, chapter_path)
         driver.quit()
-        return image_urls
     except Exception as e:
         logging.error(f"Error extracting chapter content: {e}")
-        return []
+
+
+def _scroll_down_page(driver):
+    SECONDS_TO_SCROLL = 30
+    start_time = time.time()
+    while time.time() - start_time < SECONDS_TO_SCROLL:
+        driver.execute_script("window.scrollBy(0, 200);")
+        time.sleep(0.5)
 
 
 def _allow_reading_content(driver):
@@ -134,23 +116,51 @@ def _allow_reading_content(driver):
 
         # Click the Horizontal Scroll option to start navigating through the content
         enable_horizontal_scroll_button = driver.find_element(
-            By.CSS_SELECTOR, "a.rtl-row.mode-item[data-value='horizontal']")
+            By.CSS_SELECTOR, "a.rtl-row.mode-item[data-value='vertical']")
         enable_horizontal_scroll_button.click()
     except Exception as e:
         logging.error(f'_allow_reading_content: {e}')
 
 
-def _extract_chapter_image_urls(driver):
+def _download_blob_images(driver, chapter_path):
     try:
-        image_urls = []
-        element = driver.find_element(By.CSS_SELECTOR, '.divslide-wrapper')
-        image_elements = element.find_elements(By.CSS_SELECTOR, '.ds-item')
-        for el in image_elements:
-            element = el.find_element(By.CSS_SELECTOR, ".ds-image")
-            url = element.get_attribute("data-url")
-            if url:
-                image_urls.append(url)
-        return image_urls
+        image_obj_list = []
+        element = driver.find_element(By.CSS_SELECTOR, '.container-reader-chapter')
+
+        image_elements = element.find_elements(By.CSS_SELECTOR, '.iv-card')
+        for i, el in enumerate(image_elements):
+            element = el.find_element(By.CSS_SELECTOR, "img.image-vertical")
+            blob_url = element.get_attribute("src")
+            # Retrieve the image data from the blob URL
+            base64_image_data = _fetch_blob_as_base64(driver, blob_url)
+            # Save the base64 encoded image as a JPG file
+            _save_base64_image(base64_image_data, Path(chapter_path / f"{i + 1}.jpg"))
+
+        return image_obj_list
     except Exception as e:
-        logging.error(f'_extract_chapter_image_urls: {e}')
+        logging.error(f'_download_blob_images: {e}')
         return []
+
+
+def _fetch_blob_as_base64(driver, blob_url):
+    js_script = f'''
+    var callback = arguments[arguments.length - 1];
+    fetch("{blob_url}")
+        .then(response => response.blob())
+        .then(blob => {{
+            var reader = new FileReader();
+            reader.readAsDataURL(blob); 
+            reader.onloadend = function() {{
+                var base64data = reader.result;                
+                callback(base64data);
+            }}
+        }});
+    '''
+    return driver.execute_async_script(js_script)
+
+
+def _save_base64_image(base64_data, file_name):
+    _, encoded = base64_data.split(",", 1)
+    data = base64.b64decode(encoded)
+    with open(file_name, "wb") as file:
+        file.write(data)
