@@ -33,16 +33,16 @@ class Chapter:
         })
 
 
-def extract_manga_title(url):
+def extract_manga_metadata(url):
     try:
         response = requests.get(url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        return soup.find(class_='manga-name-or').text
+        return soup.find(class_='manga-name-or').text, soup.find(class_='manga-poster-img')['src']
     except requests.exceptions.HTTPError as e:
         logging.error(f"Error extracting manga title: {e}")
         return None
-
+        
 
 def extract_chapter_links(url):
     '''
@@ -142,13 +142,13 @@ def _download_images(driver, chapter_path):
                     _save_base64_image(base64_image_data, output_path)
                 else:
                     # Process for non-shuffled
-                    _download_jpg_image(image_url, output_path)
+                    download_jpg_image(image_url, output_path)
     except Exception as e:
         logging.error(f'_download_images: {e}')
         return []
 
 
-def _download_jpg_image(image_url, output_path):
+def download_jpg_image(image_url, output_path):
     try:
         response = requests.get(image_url, stream=True)
         if response.status_code == 200:
@@ -157,7 +157,7 @@ def _download_jpg_image(image_url, output_path):
                 file.write(response.raw.data)
             logging.info(f"Downloaded image to path: {output_path}")
         else:
-            logging.error(f"Failed to download: {url}")
+            logging.error(f"Failed to download: {image_url}")
     except requests.exceptions.RequestException as e:
         logging.error(f"Error downloading to path: {output_path} due to {e}")
 
