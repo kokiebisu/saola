@@ -107,21 +107,29 @@ def _scroll_down_page(driver):
 def _allow_reading_content(driver):
     try:
         # Remove Overlay to interact with the page
-        wait = WebDriverWait(driver, 10)
+        wait = WebDriverWait(driver, 100)
         overlay = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[style*="z-index: 2147483647"]')))
         driver.execute_script("arguments[0].style.display = 'none';", overlay)
+    except Exception as e:
+        logging.error(f'Error removing overlay: {e}')
 
-        # Click the "Accept All" button from Privacy Modal
+    try:
+        # Click the "Accept All" button from Privacy Modal, if present
         accept_all_button = driver.find_element(
             By.CSS_SELECTOR, ".st-cmp-permanent-footer-nav-buttons .st-button:nth-child(1) .st-text")
         accept_all_button.click()
+    except Exception as e:
+        # Log the error but don't stop the function if the privacy modal is not found
+        logging.info('Privacy modal not found or could not click accept all button.')
 
-        # Click the Horizontal Scroll option to start navigating through the content
+    try:
+        # Click the Horizontal Scroll option to start navigating through the content, if present
         enable_horizontal_scroll_button = driver.find_element(
             By.CSS_SELECTOR, "a.rtl-row.mode-item[data-value='vertical']")
         enable_horizontal_scroll_button.click()
     except Exception as e:
-        logging.error(f'_allow_reading_content: {e}')
+        # Log the error but continue if the button is not found
+        logging.info('Horizontal scroll option not found or could not be clicked.')
 
 
 def _download_images(driver, chapter_path):
