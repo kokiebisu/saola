@@ -21,12 +21,6 @@ logging.basicConfig(
     ]
 )
 
-# Configure Chrome options
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1")
-chrome_options.add_experimental_option("mobileEmulation", {"deviceName": "Nexus 5"})
-
 class Chapter:
     def __init__(self, base_url, name, link):
         self.name = name
@@ -78,9 +72,16 @@ def extract_chapter_content(url, chapter_path):
     Extracts all the chapter content (images) associated with the chapter.
     Returns the image urls in a list.
     '''
+    logging.info(f'Extracting Chapter Content for url: {url}')
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--disable-gpu")
+    # chrome_options.add_argument("--blink-settings=imagesEnabled=false")
+    chrome_options.add_argument("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1")
+    chrome_options.add_experimental_option("mobileEmulation", {"deviceName": "Nexus 5"})
+
+    driver = webdriver.Chrome(options=chrome_options)
     try:
-        logging.info(f'Extracting Chapter Content for url: {url}')
-        driver = webdriver.Chrome(options=chrome_options)
         driver.set_window_size(390, 844)
 
         driver.get(url)
@@ -88,10 +89,11 @@ def extract_chapter_content(url, chapter_path):
         wait = WebDriverWait(driver, 10)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.container-reader-chapter")))
         _scroll_down_page(driver)
-        _download_blob_images(driver, chapter_path)
-        driver.quit()
+        _download_images(driver, chapter_path)
     except Exception as e:
         logging.error(f"Error extracting chapter content: {e}")
+    finally:
+        driver.quit()
 
 
 def _scroll_down_page(driver):
@@ -122,25 +124,42 @@ def _allow_reading_content(driver):
         logging.error(f'_allow_reading_content: {e}')
 
 
-def _download_blob_images(driver, chapter_path):
+def _download_images(driver, chapter_path):
     try:
-        image_obj_list = []
-        element = driver.find_element(By.CSS_SELECTOR, '.container-reader-chapter')
+        iv_card_elements = driver.find_elements(By.CSS_SELECTOR, '.iv-card')
 
-        image_elements = element.find_elements(By.CSS_SELECTOR, '.iv-card')
-        for i, el in enumerate(image_elements):
-            element = el.find_element(By.CSS_SELECTOR, "img.image-vertical")
-            blob_url = element.get_attribute("src")
-            # Retrieve the image data from the blob URL
-            base64_image_data = _fetch_blob_as_base64(driver, blob_url)
-            # Save the base64 encoded image as a JPG file
-            _save_base64_image(base64_image_data, Path(chapter_path / f"{i + 1}.jpg"))
+        for i, card in enumerate(iv_card_elements):
+            img_elements = card.find_elements(By.CSS_SELECTOR, 'img.image-vertical')
+            if img_elements:
+                is_shuffled = 'shuffled' in card.get_attribute('class')
+                img_element = img_elements[0]  # Assuming there's always only one img element of interest per card
+                image_url = img_element.get_attribute("src")
+                output_path = Path(chapter_path / f"{i + 1}.jpg")
 
-        return image_obj_list
+                if is_shuffled:
+                    # Process for shuffled
+                    base64_image_data = _fetch_blob_as_base64(driver, image_url)
+                    _save_base64_image(base64_image_data, output_path)
+                else:
+                    # Process for non-shuffled
+                    _download_jpg_image(image_url, output_path)
     except Exception as e:
-        logging.error(f'_download_blob_images: {e}')
+        logging.error(f'_download_images: {e}')
         return []
 
+
+def _download_jpg_image(image_url, output_path):
+    try:
+        response = requests.get(image_url, stream=True)
+        if response.status_code == 200:
+            with open(output_path, "wb") as file:
+                response.raw.decode_content = True
+                file.write(response.raw.data)
+            logging.info(f"Downloaded image to path: {output_path}")
+        else:
+            logging.error(f"Failed to download: {url}")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error downloading to path: {output_path} due to {e}")
 
 def _fetch_blob_as_base64(driver, blob_url):
     js_script = f'''

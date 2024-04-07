@@ -20,7 +20,7 @@ def main():
     os.mkdir(manga_path)
     chapters = extract_chapter_links(url)
 
-    with ThreadPoolExecutor(max_workers=1) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         futures = []
         for chapter in chapters:
             chapter_path = Path(manga_path / f'{chapter.name}')
