@@ -1,8 +1,13 @@
+from pathlib import Path
 import json
 import logging
+import os
 import requests
 
+from PIL import Image
 from bs4 import BeautifulSoup
+
+from lib.image import download_jpg_image
 
 
 class Chapter:
@@ -22,10 +27,21 @@ def extract_manga_metadata(url):
         response = requests.get(url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        return soup.find(class_='manga-name-or').text, soup.find(class_='manga-poster-img')['src']
+        return soup.find(class_='manga-name-or').text
     except requests.exceptions.HTTPError as e:
         logging.error(f"Error extracting manga title: {e}")
         return None
+
+
+def extract_manga_cover_img(manga_path, url):
+    response = requests.get(url)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'html.parser')
+    cover_img_url = soup.find(class_='manga-poster-img')['src']
+    download_jpg_image(cover_img_url, Path(manga_path / 'cover.jpg'))
+    pdf_pages = [Image.open(Path(manga_path / 'cover.jpg'))]
+    pdf_pages[0].save(Path(manga_path / 'cover.pdf'), save_all=True, append_images=pdf_pages[1:])
+    os.remove(Path(manga_path / 'cover.jpg'))
 
 
 def extract_chapter_links(url):
