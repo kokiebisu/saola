@@ -1,16 +1,15 @@
 from pathlib import Path
-import json
-import logging
-import base64
-import time
-import requests
 
-from bs4 import BeautifulSoup
+import logging
+import time
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+
+from lib.image import download_base64_image, download_jpg_image
 
 # Configure logging
 logging.basicConfig(
@@ -21,51 +20,6 @@ logging.basicConfig(
     ]
 )
 
-class Chapter:
-    def __init__(self, base_url, name, link):
-        self.name = name
-        self.link = 'https://mangareader.to' + link
-
-    def __str__(self) -> str:
-        return json.dumps({
-            'name': self.name,
-            'link': self.link
-        })
-
-
-def extract_manga_metadata(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        return soup.find(class_='manga-name-or').text, soup.find(class_='manga-poster-img')['src']
-    except requests.exceptions.HTTPError as e:
-        logging.error(f"Error extracting manga title: {e}")
-        return None
-        
-
-def extract_chapter_links(url):
-    '''
-    Extracts all the links to the chapters of the manga.
-    '''
-    try:
-        logging.info(f'Extracting Chapter Links for url: {url}')
-        chapters = []
-        response = requests.get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        ul_element = soup.find(id='ja-chapters')
-        for li_element in ul_element.find_all('li'):
-            a_element = li_element.find('a')
-            if a_element:
-                href_value = a_element['href']
-            chapter_name = li_element.find(class_='name').text.split(':')[0]
-            chapters.append(Chapter(base_url=url, name=chapter_name, link=href_value))
-        return chapters
-    except Exception as e:
-        logging.error(f"Error extracting chapter links: {e}")
-        return []
-
 
 def extract_chapter_content(url, chapter_path):
     '''
@@ -75,8 +29,6 @@ def extract_chapter_content(url, chapter_path):
     logging.info(f'Extracting Chapter Content for url: {url}')
     chrome_options = Options()
     chrome_options.add_argument("--headless")
-    # chrome_options.add_argument("--disable-gpu")
-    # chrome_options.add_argument("--blink-settings=imagesEnabled=false")
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1")
     chrome_options.add_experimental_option("mobileEmulation", {"deviceName": "Nexus 5"})
 
@@ -104,32 +56,39 @@ def _scroll_down_page(driver):
         time.sleep(0.5)
 
 
-def _allow_reading_content(driver):
-    try:
-        # Remove Overlay to interact with the page
-        wait = WebDriverWait(driver, 100)
-        overlay = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[style*="z-index: 2147483647"]')))
-        driver.execute_script("arguments[0].style.display = 'none';", overlay)
-    except Exception as e:
-        logging.error(f'Error removing overlay: {e}')
+def _allow_reading_content(driver, max_retries=3):
+    # Configure logging as needed
+    logging.basicConfig(level=logging.INFO)
 
-    try:
-        # Click the "Accept All" button from Privacy Modal, if present
-        accept_all_button = driver.find_element(
-            By.CSS_SELECTOR, ".st-cmp-permanent-footer-nav-buttons .st-button:nth-child(1) .st-text")
-        accept_all_button.click()
-    except Exception as e:
-        # Log the error but don't stop the function if the privacy modal is not found
-        logging.info('Privacy modal not found or could not click accept all button.')
+    attempt = 0
+    while attempt < max_retries:
+        try:
+            wait = WebDriverWait(driver, 10)  # Adjust wait time as necessary for your needs
 
-    try:
-        # Click the Horizontal Scroll option to start navigating through the content, if present
-        enable_horizontal_scroll_button = driver.find_element(
-            By.CSS_SELECTOR, "a.rtl-row.mode-item[data-value='vertical']")
-        enable_horizontal_scroll_button.click()
-    except Exception as e:
-        # Log the error but continue if the button is not found
-        logging.info('Horizontal scroll option not found or could not be clicked.')
+            # Remove Overlay
+            overlay = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[style*="z-index: 2147483647"]')))
+            driver.execute_script("arguments[0].style.display = 'none';", overlay)
+
+            # Accept Privacy Policy
+            accept_all_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".st-cmp-permanent-footer-nav-buttons .st-button:nth-child(1) .st-text")))
+            accept_all_button.click()
+
+            # Enable Vertical Scroll
+            enable_vertical_scroll_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "a.rtl-row.mode-item[data-value='vertical']")))
+            enable_vertical_scroll_button.click()
+
+            # If we reach this point, actions were successful, break the loop
+            break
+
+        except Exception as e:
+            attempt += 1
+            logging.error(f'Attempt {attempt} failed: {e}')
+            if attempt == max_retries:
+                logging.error("Max retries reached. Exiting.")
+                break
+            else:
+                logging.info(f"Retrying... Attempt {attempt+1}/{max_retries}")
+                time.sleep(5)  # Wait for 5 seconds before retrying, adjust as needed
 
 
 def _download_images(driver, chapter_path):
@@ -147,7 +106,7 @@ def _download_images(driver, chapter_path):
                 if is_shuffled:
                     # Process for shuffled
                     base64_image_data = _fetch_blob_as_base64(driver, image_url)
-                    _save_base64_image(base64_image_data, output_path)
+                    download_base64_image(base64_image_data, output_path)
                 else:
                     # Process for non-shuffled
                     download_jpg_image(image_url, output_path)
@@ -155,19 +114,6 @@ def _download_images(driver, chapter_path):
         logging.error(f'_download_images: {e}')
         return []
 
-
-def download_jpg_image(image_url, output_path):
-    try:
-        response = requests.get(image_url, stream=True)
-        if response.status_code == 200:
-            with open(output_path, "wb") as file:
-                response.raw.decode_content = True
-                file.write(response.raw.data)
-            logging.info(f"Downloaded image to path: {output_path}")
-        else:
-            logging.error(f"Failed to download: {image_url}")
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Error downloading to path: {output_path} due to {e}")
 
 def _fetch_blob_as_base64(driver, blob_url):
     js_script = f'''
@@ -184,10 +130,3 @@ def _fetch_blob_as_base64(driver, blob_url):
         }});
     '''
     return driver.execute_async_script(js_script)
-
-
-def _save_base64_image(base64_data, file_name):
-    _, encoded = base64_data.split(",", 1)
-    data = base64.b64decode(encoded)
-    with open(file_name, "wb") as file:
-        file.write(data)

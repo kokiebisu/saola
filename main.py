@@ -8,7 +8,10 @@ import sys
 from PIL import Image
 import fitz
 
-from lib.extractor import download_jpg_image, extract_chapter_content, extract_chapter_links, extract_manga_metadata
+
+from lib.beautifulsoup import extract_chapter_links, extract_manga_metadata
+from lib.extractor import extract_chapter_content
+from lib.image import download_jpg_image
 from lib.utils import get_desktop_folder
 
 
@@ -23,7 +26,7 @@ def main():
     pdf_pages = [Image.open(Path(manga_path / 'cover.jpg'))]
     pdf_pages[0].save(Path(manga_path / 'cover.pdf'), save_all=True, append_images=pdf_pages[1:])
     os.remove(Path(manga_path / 'cover.jpg'))
-    
+
     # Downloads each chapter under the 'chapters' folder with the pdf
     chapters = extract_chapter_links(url)
     chapters_path = Path(manga_path / 'chapters')
@@ -51,12 +54,17 @@ def process_chapter(chapter_link, chapter_path, chapter_name, chapters_path):
     pdf_pages = []
     extract_chapter_content(chapter_link, chapter_path)
     image_files = [f for f in os.listdir(chapter_path) if f.endswith('.jpg') or f.endswith('.jpeg')]
-    # # Bundle the images into a single pdf file
+    # Bundle the images into a single pdf file
     for image_file in sorted(image_files, key=lambda x: int(os.path.splitext(x)[0])):
-        image = Image.open(Path(chapter_path / image_file))
-        pdf_pages.append(image)
-    pdf_pages[0].save(Path(chapters_path / f'{chapter_name}.pdf'), save_all=True, append_images=pdf_pages[1:])
-    shutil.rmtree(chapter_path)
+        image = Image.open(Path(chapter_path) / image_file)
+        pdf_pages.append(image.convert('RGB'))
+
+    if pdf_pages:
+        pdf_pages[0].save(Path(chapters_path) / f'{chapter_name}.pdf', save_all=True, append_images=pdf_pages[1:])
+        shutil.rmtree(chapter_path)
+    else:
+        # Handle the case where no images were found
+        print(f"No images found in {chapter_path}, skipping PDF creation.")
 
 
 if __name__ == '__main__':
