@@ -25,15 +25,24 @@ def extract_chapters(chapters_path, url):
     Downloads each chapter under the 'chapters' folder with the pdf
     '''
     chapters = extract_chapter_links(url)
-    os.mkdir(chapters_path)
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = []
-        for chapter in chapters:
-            chapter_path = Path(chapters_path / f'{chapter.name}')
-            os.mkdir(chapter_path)
-            futures.append(executor.submit(_extract_chapter, chapter.link, chapter_path, chapter.name, chapters_path))
-        for future in futures:
-            future.result()
+    try:
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = []
+            for chapter in chapters:
+                # Check if the chapter pdf already exists
+                if os.path.exists(Path(chapters_path / f'{chapter.name}.pdf')):
+                    continue
+                chapter_path = Path(chapters_path / f'{chapter.name}')
+                if os.path.exists(chapter_path):
+                    shutil.rmtree(chapter_path)
+                os.mkdir(chapter_path)
+                futures.append(executor.submit(_extract_chapter, chapter.link, chapter_path, chapter.name, 
+                                               chapters_path))
+            for future in futures:
+                future.result()
+        return True
+    except Exception:
+        return False
 
 
 def _extract_chapter(chapter_link, chapter_path, chapter_name, chapters_path):
@@ -48,4 +57,4 @@ def _extract_chapter(chapter_link, chapter_path, chapter_name, chapters_path):
         pdf_pages[0].save(Path(chapters_path) / f'{chapter_name}.pdf', save_all=True, append_images=pdf_pages[1:])
         shutil.rmtree(chapter_path)
     else:
-        print(f"No images found in {chapter_path}, skipping PDF creation.")
+        raise Exception(f'Failed to extract {chapter_link}')

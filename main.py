@@ -14,11 +14,14 @@ def main():
     desktop_path = get_desktop_folder()
     title = extract_manga_metadata(url)
     manga_path = Path(desktop_path / title)
-    chapters_path = Path(manga_path / 'chapters')
-    os.mkdir(manga_path)
+    if not os.path.exists(manga_path):
+        os.mkdir(manga_path)
     extract_manga_cover_img(manga_path, url)
-    extract_chapters(chapters_path, url)
-    merge_pdfs(manga_path, chapters_path, desktop_path, title)
+    chapters_path = Path(manga_path / 'chapters')
+    if not os.path.exists(chapters_path):
+        os.mkdir(chapters_path)
+    if extract_chapters(chapters_path, url):
+        merge_pdfs(manga_path, chapters_path, desktop_path, title)
 
 
 if __name__ == '__main__':
