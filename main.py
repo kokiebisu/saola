@@ -20,8 +20,10 @@ def main():
     chapters_path = Path(manga_path / 'chapters')
     if not os.path.exists(chapters_path):
         os.mkdir(chapters_path)
-    if extract_chapters(chapters_path, url):
-        merge_pdfs(manga_path, chapters_path, desktop_path, title)
+    while True:
+        if extract_chapters(chapters_path, url):
+            break
+    merge_pdfs(manga_path, chapters_path, desktop_path, title)
 
 
 if __name__ == '__main__':
