@@ -1,4 +1,4 @@
-# saola (pronounced: sow-la) 🦌
+# saola (Pseudoryx nghetinhensis) 🦌
 
 ## Project Overview
 
