@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project automates the collection of manga from "mangareader.to" and compiles the chapters into a single PDF file. Designed to streamline the manga reading experience, it simplifies access to offline manga content. By entering a manga URL, users can automatically download all chapters of the manga, which are then merged into a PDF and saved on the user's desktop.
+Pronounced sow-la, this project automates the collection of manga from "mangareader.to" and compiles the chapters into a single PDF file. Designed to streamline the manga reading experience, it simplifies access to offline manga content. By entering a manga URL, users can automatically download all chapters of the manga, which are then merged into a PDF and saved on the user's desktop.
 
 ## Features
 
