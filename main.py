@@ -12,7 +12,7 @@ if __name__ == '__main__':
     '''
     Script that combines combine.py and extract.py to generate a single pdf based on the manga url provided
     '''
-    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser = argparse.ArgumentParser(description="Script to extract manga chapters and merge them into a single pdf")
     parser.add_argument('--url', help='the url which you want to extract')
     parser.add_argument('--thread', metavar='N', type=int,
                         help='the number of threads', default=4)

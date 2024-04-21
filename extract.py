@@ -8,8 +8,8 @@ from lib.utils import get_desktop_folder
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Process some integers.")
-    parser.add_argument('--url', help='the url which you want to extract')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--url', help='Script that extracts the manga chapters and generate pdfs for each.')
     parser.add_argument('--thread', metavar='N', type=int,
                         help='the number of threads', default=4)
     parser.add_argument('--start', metavar='N', type=int,

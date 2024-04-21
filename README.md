@@ -35,13 +35,20 @@ Open your terminal or command prompt. Navigate to the directory where the script
 Run the script with a manga URL as an argument. Replace <manga_url> with the actual URL of the manga you wish to download and compile:
 
 ```bash
-python main.py <manga_url>
+usage: main.py [-h] [--url URL] [--thread N] [--start N] [--end N]
+
+options:
+  -h, --help  show this help message and exit
+  --url URL   the url which you want to extract
+  --thread N  the number of threads
+  --start N   the chapter you want to start extracting
+  --end N     the chapter you want to start extracting until
 ```
 
 Example:
 
 ```bash
-python main.py https://mangareader.to/some-manga-title
+python main.py --url https://mangareader.to/some-manga-title
 ```
 
 Wait for the process to complete. The script will start by creating a directory for the manga on your desktop, then proceed to download each chapter and finally compile them into a PDF. The final PDF will be saved on your desktop, within a folder named after the manga title.
