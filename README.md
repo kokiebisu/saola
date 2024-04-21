@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Pronounced sow-la, this project automates the collection of manga from "mangareader.to" and compiles the chapters into a single PDF file. Designed to streamline the manga reading experience, it simplifies access to offline manga content. By entering a manga URL, users can automatically download all chapters of the manga, which are then merged into a PDF and saved on the user's desktop.
+Pronounced sow-la, this project automates the collection of manga from [mangareader.to](https://mangareader.to/) and compiles the chapters into a single PDF file. Designed to streamline the manga reading experience, it simplifies access to offline manga content. By entering a manga URL, users can automatically download all chapters of the manga, which are then merged into a PDF and saved on the user's desktop.
 
 ## Features
 
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 Running the Script
 Open your terminal or command prompt. Navigate to the directory where the script is located.
 
-Run the script with a manga URL as an argument. Replace <manga_url> with the actual URL of the manga you wish to download and compile:
+Run the script with a [manga url](https://mangareader.to/one-piece-3) as an argument. Replace <manga_url> with the actual URL of the manga you wish to download and compile:
 
 ```bash
 usage: main.py [-h] [--url URL] [--thread N] [--start N] [--end N]
@@ -48,7 +48,7 @@ options:
 Example:
 
 ```bash
-python main.py --url https://mangareader.to/some-manga-title
+python main.py --url https://mangareader.to/one-piece-3
 ```
 
 Wait for the process to complete. The script will start by creating a directory for the manga on your desktop, then proceed to download each chapter and finally compile them into a PDF. The final PDF will be saved on your desktop, within a folder named after the manga title.
