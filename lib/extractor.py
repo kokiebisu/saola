@@ -7,7 +7,6 @@ import shutil
 
 from PIL import Image
 
-from lib.beautifulsoup import extract_chapter_links
 from lib.selenium import extract_chapter_content
 
 
@@ -20,16 +19,14 @@ logging.basicConfig(
 )
 
 
-def extract_chapters(chapters_path, url):
+def extract_chapters(chapters, chapters_path, thread_count):
     '''
     Downloads each chapter under the 'chapters' folder with the pdf
     '''
-    chapters = extract_chapter_links(url)
     try:
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=thread_count) as executor:
             futures = []
             for chapter in chapters:
-                # Check if the chapter pdf already exists
                 if os.path.exists(Path(chapters_path / f'{chapter.name}.pdf')):
                     continue
                 chapter_path = Path(chapters_path / f'{chapter.name}')

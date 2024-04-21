@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import requests
+import re
 
 from PIL import Image
 from bs4 import BeautifulSoup
@@ -44,7 +45,7 @@ def extract_manga_cover_img(manga_path, url):
     os.remove(Path(manga_path / 'cover.jpg'))
 
 
-def extract_chapter_links(url):
+def extract_chapter_links(url, start, end):
     '''
     Extracts all the links to the chapters of the manga.
     '''
@@ -60,7 +61,12 @@ def extract_chapter_links(url):
             if a_element:
                 href_value = a_element['href']
             chapter_name = li_element.find(class_='name').text.split(':')[0]
-            chapters.append(Chapter(base_url=url, name=chapter_name, link=href_value))
+            numbers = re.findall(r'\d+', chapter_name)
+            if numbers:
+                numbers = int(numbers[0])
+            if start and start <= numbers:
+                if not end or (end and end >= numbers):
+                    chapters.append(Chapter(base_url=url, name=chapter_name, link=href_value))
         return chapters
     except Exception as e:
         logging.error(f"Error extracting chapter links: {e}")

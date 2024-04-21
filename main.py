@@ -2,9 +2,7 @@
 from pathlib import Path
 import os
 
-import sys
-
-from lib.beautifulsoup import extract_manga_cover_img, extract_manga_metadata
+from lib.beautifulsoup import extract_chapter_links, extract_manga_cover_img, extract_manga_metadata
 from lib.extractor import extract_chapters
 from lib.utils import get_desktop_folder, merge_pdfs
 
@@ -20,8 +18,9 @@ def main():
     chapters_path = Path(manga_path / 'chapters')
     if not os.path.exists(chapters_path):
         os.mkdir(chapters_path)
+    chapters = extract_chapter_links(args.url, args.start, args.end)
     while True:
-        if extract_chapters(chapters_path, url):
+        if extract_chapters(chapters_path, args.url, args.thread, args.start, args.end):
             break
     merge_pdfs(manga_path, chapters_path, desktop_path, title)
 
