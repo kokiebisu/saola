@@ -13,13 +13,13 @@ if __name__ == '__main__':
     Script that combines combine.py and extract.py to generate a single pdf based on the manga url provided
     '''
     parser = argparse.ArgumentParser(description="Script to extract manga chapters and merge them into a single pdf")
-    parser.add_argument('--url', help='the url which you want to extract')
-    parser.add_argument('--thread', metavar='N', type=int,
-                        help='the number of threads', default=4)
-    parser.add_argument('--start', metavar='N', type=int,
-                        help='the chapter you want to start extracting')
-    parser.add_argument('--end', metavar='N', type=int,
-                        help='the chapter you want to start extracting until')
+    parser.add_argument('-u', '--url', help='manga url which you want to extract/generate the pdf')
+    parser.add_argument('-t', '--thread', type=int,
+                        help='number of threads you want to use to process', default=4)
+    parser.add_argument('-s', '--start', type=int,
+                        help='starting chapter within the range you want to extract')
+    parser.add_argument('-e', '--end', type=int,
+                        help='last chapter within the range you want to extract')
     args = parser.parse_args()
 
     desktop_path = get_desktop_folder()
