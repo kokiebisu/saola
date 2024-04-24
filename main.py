@@ -33,6 +33,6 @@ if __name__ == '__main__':
         os.mkdir(chapters_path)
     chapters = extract_chapter_links(args.url, args.start, args.end)
     while True:
-        if extract_chapters(chapters_path, args.url, args.thread, args.start, args.end):
+        if extract_chapters(chapters, chapters_path, args.thread):
             break
     merge_pdfs(manga_path, chapters_path, desktop_path, title)
