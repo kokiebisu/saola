@@ -47,7 +47,11 @@ def extract_manga_cover_img(manga_path, url):
 
 def extract_chapter_links(url, start, end):
     '''
-    Extracts all the links to the chapters of the manga.
+    Extracts all the links to the chapters of the manga from 'start' to 'end', inclusive.
+    If only 'start' is provided, it covers from 'start' to the last chapter.
+    If only 'end' is provided, it covers from the first to 'end'.
+    If both 'start' and 'end' are specified, it covers from 'start' to 'end'.
+    If neither is specified, it covers all chapters.
     '''
     try:
         logging.info(f'Extracting Chapter Links for url: {url}')
@@ -63,9 +67,8 @@ def extract_chapter_links(url, start, end):
             chapter_name = li_element.find(class_='name').text.split(':')[0]
             numbers = re.findall(r'\d+', chapter_name)
             if numbers:
-                numbers = int(numbers[0])
-            if start and start <= numbers:
-                if not end or (end and end >= numbers):
+                chapter_number = int(numbers[0])
+                if (start is None or chapter_number >= start) and (end is None or chapter_number <= end):
                     chapters.append(Chapter(base_url=url, name=chapter_name, link=href_value))
         return chapters
     except Exception as e:
