@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import os
 import re
@@ -23,3 +24,9 @@ def merge_pdfs(manga_path, chapters_path, desktop_path, title):
         with fitz.open(Path(chapters_path / pdf_file)) as pdf:
             pdf_output.insert_pdf(pdf)
     pdf_output.save(Path(desktop_path / f'{title}.pdf'))
+
+
+def read_base_path():
+    with open('settings.json', 'r') as f:
+        data = json.load(f)
+    return Path(data.get('basePath', get_desktop_folder()))
