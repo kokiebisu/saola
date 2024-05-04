@@ -1,4 +1,4 @@
-# saola (Pseudoryx nghetinhensis) 🦌
+# saola 🦌
 
 ## Project Overview
 
@@ -15,7 +15,7 @@ Pronounced sow-la, this project automates the collection of manga from [mangarea
 
 - Setup: The script prepares a folder structure on the user's desktop, organizing downloads by manga title and chapters.
 - Scraping: Utilizes custom functions to scrape manga metadata and chapter content from the specified URL.
-- Compilation: Downloads are merged into a single PDF, preserving the order and integrity of the manga chapters.
+- Compilation: Downloads are merged into a single PDF, preserving the order of the manga chapters.
 
 ## Usage
 
@@ -23,38 +23,64 @@ This project is designed to be straightforward and user-friendly, enabling users
 
 ### Prerequisites
 
-Ensure you have Python installed on your system. This script is compatible with Python 3.x. Additionally, you will need to install a few Python libraries. You can install these dependencies by running:
+Ensure you have Python 3.11 installed on your system. Additionally, you will need to install a few Python libraries. You can install these dependencies by running:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Running the Script
 Open your terminal or command prompt. Navigate to the directory where the script is located.
 
-Run the script with a [manga url](https://mangareader.to/one-piece-3) as an argument. Replace <manga_url> with the actual URL of the manga you wish to download and compile:
+### Use Cases
+
+1. You want to extract the manga into a folder and then merge it into a pdf.
 
 ```bash
-usage: main.py [-h] [--url URL] [--thread N] [--start N] [--end N]
-
-options:
-  -h, --help  show this help message and exit
-  --url URL   the url which you want to extract
-  --thread N  the number of threads
-  --start N   the chapter you want to start extracting
-  --end N     the chapter you want to start extracting until
+usage: python main.py [-h] [-u URL] [-t N] [-s N] [-e N] [-l S]
 ```
 
 Example:
 
 ```bash
-python main.py --url https://mangareader.to/one-piece-3
+# Indicates you want to download the manga at https://mangareader.to/one-piece-3 with 8 threads and start from chapter 12 till 256. The langauge should be japanese.
+usage: python saola.py -u https://mangareader.to/one-piece-3 -t 8 -s 12 -e 256 -l ja
 ```
 
 Wait for the process to complete. The script will start by creating a directory for the manga on your desktop, then proceed to download each chapter and finally compile them into a PDF. The final PDF will be saved on your desktop, within a folder named after the manga title.
 
+You can also run other scripts in case you want to just
+
+2. Scrapes the manga into a folder (skip the merging into a single pdf)
+
+```bash
+usage: python scrape.py [-h] [-u URL] [-t N] [-s N] [-e N] [-l S]
+```
+
+3. You have the extracted manga already inside a folder and just want to merge it into a single pdf
+
+```bash
+usage: python compile.py [-h] [-u URL]
+```
+
+The following are all the options you can pass to the script:
+
+```bash
+options:
+  -h, --help  show this help message and exit
+  -u --url URL   the url which you want to extract (Required)
+  -t --thread N  the number of threads (Optional: Default 4)
+  -s --start N   the chapter you want to extract from (Optional)
+  -e --end N     the chapter you want to extract until (Optional)
+  -l --language S the language of the manga you want to scrape (Option: Default to 'ja')
+```
+
+### Customization
+
+If you want to customize configurations (like specifying where the folder should be created), you can do so by creating `settings.json` and by filling in the properties you want to update.
+You can see an example at `settings.example.jsonc`.
+
 ### Notes
 
 Ensure that the URL you provide is a valid "mangareader.to" manga page.
-Download times may vary based on the number of chapters and your internet speed.
+Download times may vary based on the number of threads being used, chapters and your internet speed.
 The script is designed for personal use and respects the copyright of manga creators. Please use it responsibly.
