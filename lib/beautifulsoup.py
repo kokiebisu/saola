@@ -45,7 +45,7 @@ def extract_manga_cover_img(manga_path, url):
     os.remove(Path(manga_path / 'cover.jpg'))
 
 
-def extract_chapter_links(url, start, end):
+def extract_chapter_links(url, start, end, language):
     '''
     Extracts all the links to the chapters of the manga from 'start' to 'end', inclusive.
     If only 'start' is provided, it covers from 'start' to the last chapter.
@@ -59,18 +59,22 @@ def extract_chapter_links(url, start, end):
         response = requests.get(url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        ul_element = soup.find(id='ja-chapters')
-        for li_element in ul_element.find_all('li'):
-            a_element = li_element.find('a')
-            if a_element:
-                href_value = a_element['href']
-            chapter_name = li_element.find(class_='name').text.split(':')[0]
-            numbers = re.findall(r'\d+', chapter_name)
-            if numbers:
-                chapter_number = int(numbers[0])
-                if (start is None or chapter_number >= start) and (end is None or chapter_number <= end):
-                    chapters.append(Chapter(base_url=url, name=chapter_name, link=href_value))
-        return chapters
+        ul_element = soup.find(id=f'{language}-chapters')
+        try:
+            all_list_elements = ul_element.find_all('li')
+            for li_element in all_list_elements:
+                a_element = li_element.find('a')
+                if a_element:
+                    href_value = a_element['href']
+                chapter_name = li_element.find(class_='name').text.split(':')[0]
+                numbers = re.findall(r'\d+', chapter_name)
+                if numbers:
+                    chapter_number = int(numbers[0])
+                    if (start is None or chapter_number >= start) and (end is None or chapter_number <= end):
+                        chapters.append(Chapter(base_url=url, name=chapter_name, link=href_value))
+            return chapters
+        except Exception:
+            logging.error("The manga is doesn't include the language you specified. Try another one.")
     except Exception as e:
         logging.error(f"Error extracting chapter links: {e}")
         return []
