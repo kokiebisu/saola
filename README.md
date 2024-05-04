@@ -68,7 +68,7 @@ The following are all the options you can pass to the script:
 options:
   -h, --help  show this help message and exit
   -u --url URL   the url which you want to extract (Required)
-  -t --thread N  the number of threads (Optional: Default 4)
+  -t --thread N  the number of threads (Optional: Default 1)
   -s --start N   the chapter you want to extract from (Optional)
   -e --end N     the chapter you want to extract until (Optional)
   -l --language S the language of the manga you want to scrape (Option: Default to 'ja')
