@@ -6,6 +6,9 @@ from lib.beautifulsoup import extract_manga_cover_img, extract_manga_metadata
 from lib.utils import get_desktop_folder, merge_pdfs
 
 if __name__ == '__main__':
+    '''
+    A script that compiles the manga folder into a single pdf
+    '''
     parser = argparse.ArgumentParser(description='Script that combines all the chapter pdfs into a single pdf.')
     parser.add_argument('-u', '--url', help='manga url which you want to generate the pdf')
     args = parser.parse_args()

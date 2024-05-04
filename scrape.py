@@ -8,14 +8,20 @@ from lib.utils import get_desktop_folder
 
 
 if __name__ == '__main__':
+    '''
+    Script that scrapes the manga based on the specified url
+    '''
     parser = argparse.ArgumentParser(description='Script that extracts the manga chapters and generate pdfs for each.')
-    parser.add_argument('-u', '--url', help='manga url which you want to extract')
+    parser.add_argument('-u', '--url', help='manga url which you want to extract', required=True)
     parser.add_argument('-t', '--thread', type=int,
-                        help='number of threads you want to use to process', default=4)
+                        help='number of threads you want to use to process', default=1)
     parser.add_argument('-s', '--start', type=int,
-                        help='starting chapter within the range you want to extract')
+                        help='starting chapter within the range you want to extract', required=False)
     parser.add_argument('-e', '--end', type=int,
-                        help='last chapter within the range you want to extract')
+                        help='last chapter within the range you want to extract', required=False)
+    parser.add_argument('-l', '--language', type=str, choices=['ja', 'en', 'sp'],
+                        help='language option: ja (Japanese), en (English), sp (Spanish)',
+                        default='ja')
     args = parser.parse_args()
 
     desktop_path = get_desktop_folder()
@@ -26,7 +32,7 @@ if __name__ == '__main__':
     chapters_path = Path(manga_path / 'chapters')
     if not os.path.exists(chapters_path):
         os.mkdir(chapters_path)
-    chapters = extract_chapter_links(args.url, args.start, args.end)
+    chapters = extract_chapter_links(args.url, args.start, args.end, args.language)
     while True:
         if extract_chapters(chapters, chapters_path, args.thread):
             break
