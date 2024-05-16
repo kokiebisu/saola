@@ -1,0 +1,30 @@
+services:
+  selenium-chrome:
+    container_name: selenium-chrome
+    image: selenium/standalone-chrome
+    platform: linux/amd64
+    ports:
+      - "4444:4444"
+    networks:
+      - selenium-net
+    # environment:
+    #   - SE_NODE_SESSION_TIMEOUT=60
+    #   - SE_OPTS="--session-timeout 60"
+  script:
+    container_name: script
+    depends_on:
+      - selenium-chrome
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      OUTPUT_PATH: /app/downloads
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - selenium-net
+
+networks:
+  selenium-net:
+    driver: bridge

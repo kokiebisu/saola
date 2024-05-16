@@ -29,7 +29,7 @@ if __name__ == '__main__':
     title = extract_manga_metadata(args.url)
     manga_path = Path(base_path / title)
     if not os.path.exists(manga_path):
-        os.mkdir(manga_path)
+        os.makedirs(manga_path)
     extract_manga_cover_img(manga_path, args.url)
     chapters_path = Path(manga_path / 'chapters')
     if not os.path.exists(chapters_path):

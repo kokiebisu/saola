@@ -3,7 +3,6 @@ import logging
 import time
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -27,15 +26,19 @@ def extract_chapter_content(url, chapter_path):
     Returns the image urls in a list.
     '''
     logging.info(f'Extracting Chapter Content for url: {url}')
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1")
-    chrome_options.add_experimental_option("mobileEmulation", {"deviceName": "Nexus 5"})
+    options = webdriver.ChromeOptions()
+    options.add_argument('--ignore-ssl-errors=yes')
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument("--headless")
+    options.add_argument("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1")
+    options.add_experimental_option("mobileEmulation", {"deviceName": "Nexus 5"})
 
-    driver = webdriver.Chrome(options=chrome_options)
     try:
+        driver = webdriver.Remote(
+            command_executor='http://selenium-chrome:4444/wd/hub',
+            options=options
+        )
         driver.set_window_size(390, 844)
-
         driver.get(url)
         _allow_reading_content(driver)
         wait = WebDriverWait(driver, 10)

@@ -17,33 +17,42 @@ Pronounced sow-la, this project automates the collection of manga from [mangarea
 - Scraping: Utilizes custom functions to scrape manga metadata and chapter content from the specified URL.
 - Compilation: Downloads are merged into a single PDF, preserving the order of the manga chapters.
 
-## Usage
+## Prerequisites
 
-This project is designed to be straightforward and user-friendly, enabling users to quickly download manga from "mangareader.to" and compile it into a single PDF. Follow these steps to use the script:
+Before you begin, ensure you have met the following requirements:
 
-### Prerequisites
+- **Docker**: You need Docker installed on your system to build and run the containers. Download and install Docker from [Docker's official site](https://www.docker.com/get-started).
 
-Ensure you have Python 3.11 installed on your system. Additionally, you will need to install a few Python libraries. You can install these dependencies by running:
+## Setup
 
-```bash
-pip install -r requirements.txt
-```
+To get a local copy up and running follow these simple steps:
 
-Open your terminal or command prompt. Navigate to the directory where the script is located.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/kokiebisu/saola.git
+   cd saola
+   ```
+2. **Build the Docker environment**
+
+   ```bash
+   make run-clean-container
+   ```
+
+   This command builds the Docker images and starts the containers in the background. Once the containers are up, one will be in a 'waiting' mode, ready for commands to be executed.
 
 ### Use Cases
 
 1. You want to extract the manga into a folder and then merge it into a pdf.
 
 ```bash
-usage: python main.py [-h] [-u URL] [-t N] [-s N] [-e N] [-l S]
+usage: docker-compose exec script python saola.py [-h] [-u URL] [-t N] [-s N] [-e N] [-l S]
 ```
 
 Example:
 
 ```bash
 # Indicates you want to download the manga at https://mangareader.to/one-piece-3 with 8 threads and start from chapter 12 till 256. The langauge should be japanese.
-usage: python saola.py -u https://mangareader.to/one-piece-3 -t 8 -s 12 -e 256 -l ja
+usage: make saola OPTIONS="-u https://mangareader.to/one-piece-3 -t 8 -s 12 -e 256 -l ja"
 ```
 
 Wait for the process to complete. The script will start by creating a directory for the manga on your desktop, then proceed to download each chapter and finally compile them into a PDF. The final PDF will be saved on your desktop, within a folder named after the manga title.
@@ -53,13 +62,13 @@ You can also run other scripts in case you want to just
 2. Scrapes the manga into a folder (skip the merging into a single pdf)
 
 ```bash
-usage: python scrape.py [-h] [-u URL] [-t N] [-s N] [-e N] [-l S]
+usage: make scrape OPTIONS="[-h] [-u URL] [-t N] [-s N] [-e N] [-l S]"
 ```
 
 3. You have the extracted manga already inside a folder and just want to merge it into a single pdf
 
 ```bash
-usage: python compile.py [-h] [-u URL]
+usage: make compile OPTIONS="[-h] [-u URL]"
 ```
 
 The following are all the options you can pass to the script:
