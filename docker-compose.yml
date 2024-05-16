@@ -1,15 +1,20 @@
 services:
   selenium-chrome:
     container_name: selenium-chrome
-    image: selenium/standalone-chrome
-    platform: linux/amd64
+    image: seleniarm/standalone-chromium
+    platform: linux/arm64
     ports:
       - "4444:4444"
     networks:
       - selenium-net
-    # environment:
-    #   - SE_NODE_SESSION_TIMEOUT=60
-    #   - SE_OPTS="--session-timeout 60"
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=60 # Set session timeout to 120 seconds
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+
   script:
     container_name: script
     depends_on:

@@ -1,5 +1,5 @@
 # Use the official Python 3.11 slim image from the Docker Hub
-FROM --platform=linux/arm64 python:3.11.6
+FROM python:3.11.6
 
 # Install necessary packages including Chromium and ChromeDriver
 RUN apt-get update && apt-get install -y --no-install-recommends \
