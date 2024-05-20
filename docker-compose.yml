@@ -8,7 +8,7 @@ services:
     networks:
       - selenium-net
     environment:
-      - SE_NODE_SESSION_TIMEOUT=60 # Set session timeout to 120 seconds
+      - SE_NODE_SESSION_TIMEOUT=60
     deploy:
       resources:
         limits:

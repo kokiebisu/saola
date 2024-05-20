@@ -34,23 +34,16 @@ def extract_chapter_content(url, chapter_path):
     options.add_experimental_option("mobileEmulation", {"deviceName": "Nexus 5"})
 
     try:
-        print("ENTERED-1")
         driver = webdriver.Remote(
             command_executor='http://selenium-chrome:4444/wd/hub',
             options=options
         )
-        print("ENTERED0")
         driver.set_window_size(390, 844)
-        print("ENTERED1")
         driver.get(url)
-        print("ENTERED2")
         _allow_reading_content(driver)
-        print("ENTERED3")
         wait = WebDriverWait(driver, 10)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.container-reader-chapter")))
-        print("ENTERED4")
         _scroll_down_page(driver)
-        print("ENTERED5")
         _download_images(driver, chapter_path)
     except Exception as e:
         logging.error(f"Error extracting chapter content: {e}")
