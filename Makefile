@@ -1,13 +1,13 @@
 OPTIONS ?=
 SCRIPT_PREFIX = docker-compose exec script python
 
-run-container:
+start-container:
 	docker-compose up -d
 
 recreate-container:
 	docker-compose up --build --remove-orphans -d
 
-close-container:
+stop-container:
 	docker-compose down
 
 saola:
