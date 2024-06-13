@@ -4,7 +4,7 @@ from pathlib import Path
 
 from lib.beautifulsoup import extract_chapter_links, extract_manga_metadata
 from lib.extractor import extract_chapters
-from lib.utils import get_desktop_folder
+from lib.utils import read_base_path
 
 
 if __name__ == '__main__':
@@ -24,9 +24,11 @@ if __name__ == '__main__':
                         default='ja')
     args = parser.parse_args()
 
-    desktop_path = get_desktop_folder()
+    base_path = read_base_path()
     title = extract_manga_metadata(args.url)
-    manga_path = Path(desktop_path / title)
+    manga_path = Path(base_path / title)
+    if not os.path.exists(manga_path):
+        os.makedirs(manga_path)
     if not os.path.exists(manga_path):
         os.mkdir(manga_path)
     chapters_path = Path(manga_path / 'chapters')

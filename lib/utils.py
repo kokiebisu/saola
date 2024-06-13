@@ -5,12 +5,6 @@ import re
 import fitz
 
 
-def get_desktop_folder():
-    home_dir = Path.home()
-    desktop_folder = home_dir / 'Desktop'
-    return desktop_folder
-
-
 def merge_pdfs(manga_path, chapters_path, desktop_path, title):
     '''
     Merges all the pdf files that were generated including cover.pdf and the chapter.pdfs.
