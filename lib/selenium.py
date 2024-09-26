@@ -71,9 +71,10 @@ def _allow_reading_content(driver, max_retries=3):
             overlay = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[style*="z-index: 2147483647"]')))
             driver.execute_script("arguments[0].style.display = 'none';", overlay)
 
+            # TODO: Seems like this may not be needed anymore
             # Accept Privacy Policy
-            accept_all_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".st-cmp-permanent-footer-nav-buttons .st-button:nth-child(1) .st-text")))
-            accept_all_button.click()
+            # accept_all_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".st-cmp-permanent-footer-nav-buttons .st-button:nth-child(1) .st-text")))
+            # accept_all_button.click()
 
             # Enable Vertical Scroll
             enable_vertical_scroll_button = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "a.rtl-row.mode-item[data-value='vertical']")))
