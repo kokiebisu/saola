@@ -43,20 +43,28 @@ def extract_chapter_content(url, chapter_path):
         _allow_reading_content(driver)
         wait = WebDriverWait(driver, 10)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.container-reader-chapter")))
-        _scroll_down_page(driver)
+        _wait_until_images_load(driver)
         _download_images(driver, chapter_path)
     except Exception as e:
         logging.error(f"Error extracting chapter content: {e}")
     finally:
         driver.quit()
 
+def _wait_until_images_load(driver):
+    num_images = len(driver.find_elements(By.CSS_SELECTOR, "div.container-reader-chapter > div"))
+    i = 0
+    while i < num_images:
+        current_element = driver.find_elements(By.CSS_SELECTOR, "div.container-reader-chapter > div")[i]
+        if not current_element.find_elements(By.TAG_NAME, "img"):
+            time.sleep(10)
+            continue
+        else:
+            _scroll_down_page(driver)
+            i = i + 1
 
 def _scroll_down_page(driver):
-    SECONDS_TO_SCROLL = 30
-    start_time = time.time()
-    while time.time() - start_time < SECONDS_TO_SCROLL:
-        driver.execute_script("window.scrollBy(0, 200);")
-        time.sleep(0.5)
+    driver.execute_script("window.scrollBy(0, 615);")
+    time.sleep(0.5)
 
 
 def _allow_reading_content(driver, max_retries=3):
