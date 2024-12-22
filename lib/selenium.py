@@ -30,45 +30,53 @@ def extract_chapter_content(url, chapter_path):
     options.add_argument('--ignore-ssl-errors=yes')
     options.add_argument('--ignore-certificate-errors')
     options.add_argument("--headless")
+    options.add_argument("--disable-gpu")  # Disable GPU acceleration
+    options.add_argument("--no-sandbox")  # Bypass OS security model
+    options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
     options.add_argument("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1")
     options.add_experimental_option("mobileEmulation", {"deviceName": "Nexus 5"})
 
     try:
+        logging.info('Setting up driver...')
         driver = webdriver.Remote(
             command_executor='http://selenium-chrome:4444/wd/hub',
             options=options
         )
         driver.set_window_size(390, 844)
+        logging.info('Fetching URL...')
         driver.get(url)
-        _allow_reading_content(driver)
+        _enable_vertical_scroll(driver)
         wait = WebDriverWait(driver, 10)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.container-reader-chapter")))
-        _wait_until_images_load(driver)
+        _load_all_images(driver)
         _download_images(driver, chapter_path)
     except Exception as e:
         logging.error(f"Error extracting chapter content: {e}")
     finally:
         driver.quit()
 
-def _wait_until_images_load(driver):
+def _load_all_images(driver):
+    logging.info('Page initially loaded..')
     num_images = len(driver.find_elements(By.CSS_SELECTOR, "div.container-reader-chapter > div"))
     i = 0
     while i < num_images:
         current_element = driver.find_elements(By.CSS_SELECTOR, "div.container-reader-chapter > div")[i]
         if not current_element.find_elements(By.TAG_NAME, "img"):
-            time.sleep(10)
+            time.sleep(2)
             continue
         else:
-            _scroll_down_page(driver)
+            _scroll_down_page(driver, i+1)
             i = i + 1
 
-def _scroll_down_page(driver):
+def _scroll_down_page(driver, i):
+    logging.info(f'Scrolling to page {i}...')
     driver.execute_script("window.scrollBy(0, 615);")
     time.sleep(0.5)
 
 
-def _allow_reading_content(driver, max_retries=3):
+def _enable_vertical_scroll(driver, max_retries=3):
     logging.basicConfig(level=logging.INFO)
+    logging.info('Enabling vertical scroll... ')
 
     attempt = 0
     while attempt < max_retries:
@@ -102,6 +110,7 @@ def _allow_reading_content(driver, max_retries=3):
 
 
 def _download_images(driver, chapter_path):
+    logging.info('Downloading the loaded images...')
     try:
         iv_card_elements = driver.find_elements(By.CSS_SELECTOR, '.iv-card')
 
