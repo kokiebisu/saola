@@ -8,12 +8,21 @@ services:
     networks:
       - selenium-net
     environment:
-      - SE_NODE_SESSION_TIMEOUT=60
+      - SE_NODE_SESSION_TIMEOUT=600
+      - SE_NODE_MAX_SESSIONS=8
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_SCREEN_WIDTH=1280
+      - SE_SCREEN_HEIGHT=720
+      - SE_SCREEN_DEPTH=24
     deploy:
       resources:
         limits:
-          cpus: "2"
-          memory: 2G
+          cpus: "6"
+          memory: 16G
+        reservations:
+          cpus: "4"
+          memory: 8G
+    shm_size: "512m"
 
   script:
     container_name: script
